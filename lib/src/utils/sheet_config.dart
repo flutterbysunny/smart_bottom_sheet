@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'sheet_handle.dart';
+
 
 /// Snap positions for [SnapSheet].
 enum SnapPoint {
@@ -33,13 +35,15 @@ enum SheetColor {
 /// const config = SheetConfig(
 ///   peekHeight: 120,
 ///   isDismissible: false,
+///   handleStyle: HandleStyle.pill,
+///   handleColor: Colors.blue,
 /// );
 /// ```
 class SheetConfig {
   /// Height in pixels for the [SnapPoint.peek] position.
   final double peekHeight;
 
-  /// Fraction of screen height for [SnapPoint.half] position.
+  /// Fraction of screen height for the [SnapPoint.half] position.
   final double halfHeight;
 
   /// Whether the sheet can be dismissed by tapping the backdrop.
@@ -47,6 +51,12 @@ class SheetConfig {
 
   /// Whether to show the drag handle bar at the top of the sheet.
   final bool showHandle;
+
+  /// Visual style of the drag handle.
+  final HandleStyle handleStyle;
+
+  /// Custom color for the drag handle.
+  final Color? handleColor;
 
   /// Background color of the sheet. Defaults to [ColorScheme.surface].
   final Color? backgroundColor;
@@ -60,6 +70,8 @@ class SheetConfig {
     this.halfHeight = 0.45,
     this.isDismissible = true,
     this.showHandle = true,
+    this.handleStyle = HandleStyle.defaultHandle,
+    this.handleColor,
     this.backgroundColor,
     this.borderRadius,
   });

@@ -1,11 +1,16 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import '../utils/sheet_config.dart';
 
 /// Controls the height and snap state of a [SnapSheet].
 ///
 /// Can be used to programmatically snap the sheet:
 /// ```dart
-/// final controller = SheetController();
+/// final controller = SheetController(
+///   onSnap: (snap) => print('Snapped to $snap'),
+///   onOpen: () => print('Sheet opened'),
+///   onClose: () => print('Sheet closed'),
+/// );
 /// controller.snapTo(SnapPoint.full, context);
 /// ```
 class SheetController extends ChangeNotifier {
@@ -19,11 +24,23 @@ class SheetController extends ChangeNotifier {
   /// Fraction of screen height for the half snap position.
   final double halfFraction;
 
+  /// Called when sheet reaches [SnapPoint.full].
+  final VoidCallback? onOpen;
+
+  /// Called when sheet is dismissed or closed.
+  final VoidCallback? onClose;
+
+  /// Called whenever sheet snaps to a new [SnapPoint].
+  final void Function(SnapPoint snap)? onSnap;
+
   /// Creates a [SheetController].
   SheetController({
     this.peekHeight = 90,
     this.halfFraction = 0.45,
     SnapPoint initialSnap = SnapPoint.half,
+    this.onOpen,
+    this.onClose,
+    this.onSnap,
   })  : _currentSnap = initialSnap,
         _currentHeight = 0;
 
@@ -59,7 +76,8 @@ class SheetController extends ChangeNotifier {
     final screenHeight = MediaQuery.of(context).size.height;
     _isDragging = true;
     _currentHeight -= details.delta.dy;
-    _currentHeight = _currentHeight.clamp(peekHeight * 0.8, screenHeight * 0.95);
+    _currentHeight =
+        _currentHeight.clamp(peekHeight * 0.8, screenHeight * 0.95);
     notifyListeners();
   }
 
@@ -78,32 +96,52 @@ class SheetController extends ChangeNotifier {
     notifyListeners();
   }
 
+  void _applyHaptic(SnapPoint snap) {
+    switch (snap) {
+      case SnapPoint.peek:
+        HapticFeedback.lightImpact();
+        break;
+      case SnapPoint.half:
+        HapticFeedback.mediumImpact();
+        break;
+      case SnapPoint.full:
+        HapticFeedback.heavyImpact();
+        break;
+    }
+  }
+
+  void _updateSnap(SnapPoint snap, double screenHeight) {
+    _currentSnap = snap;
+    _currentHeight = _heightForSnap(snap, screenHeight);
+    _applyHaptic(snap);
+    onSnap?.call(snap);
+    if (snap == SnapPoint.full) onOpen?.call();
+  }
+
   void _snapUp(double screenHeight) {
     switch (_currentSnap) {
       case SnapPoint.peek:
-        _currentSnap = SnapPoint.half;
+        _updateSnap(SnapPoint.half, screenHeight);
         break;
       case SnapPoint.half:
-        _currentSnap = SnapPoint.full;
+        _updateSnap(SnapPoint.full, screenHeight);
         break;
       case SnapPoint.full:
         break;
     }
-    _currentHeight = _heightForSnap(_currentSnap, screenHeight);
   }
 
   void _snapDown(double screenHeight) {
     switch (_currentSnap) {
       case SnapPoint.full:
-        _currentSnap = SnapPoint.half;
+        _updateSnap(SnapPoint.half, screenHeight);
         break;
       case SnapPoint.half:
-        _currentSnap = SnapPoint.peek;
+        _updateSnap(SnapPoint.peek, screenHeight);
         break;
       case SnapPoint.peek:
         break;
     }
-    _currentHeight = _heightForSnap(_currentSnap, screenHeight);
   }
 
   void _snapToNearest(double screenHeight) {
@@ -115,23 +153,24 @@ class SheetController extends ChangeNotifier {
       SnapPoint.half: (_currentHeight - half).abs(),
       SnapPoint.full: (_currentHeight - full).abs(),
     };
-    _currentSnap = distances.entries
+    final nearest = distances.entries
         .reduce((a, b) => a.value < b.value ? a : b)
         .key;
-    _currentHeight = _heightForSnap(_currentSnap, screenHeight);
+    _updateSnap(nearest, screenHeight);
   }
 
   /// Programmatically snap to a specific [SnapPoint].
   void snapTo(SnapPoint snap, BuildContext context) {
     final screenHeight = MediaQuery.of(context).size.height;
-    _currentSnap = snap;
-    _currentHeight = _heightForSnap(snap, screenHeight);
+    _updateSnap(snap, screenHeight);
     notifyListeners();
   }
 
   /// Dismisses the sheet by setting height to 0.
   void dismiss() {
+    HapticFeedback.lightImpact();
     _currentHeight = 0;
+    onClose?.call();
     notifyListeners();
   }
 }
