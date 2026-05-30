@@ -1,3 +1,13 @@
+/// A smart, feature-rich Flutter bottom sheet package.
+///
+/// Provides 6 ready-to-use sheet types:
+/// - [ActionMenuSheet] — quick actions list
+/// - [SnapSheet] — 3 snap points with physics
+/// - [FormSheet] — keyboard-aware inline form
+/// - [ConfirmSheet] — destructive action confirmation
+/// - [StepperSheet] — multi-step flow
+/// - [RatingSheet] — animated star rating
+
 library smart_bottom_sheet;
 
 export 'src/controller/sheet_controller.dart';

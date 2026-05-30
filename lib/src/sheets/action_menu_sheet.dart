@@ -130,7 +130,7 @@ class _ActionTile extends StatelessWidget {
 
     final bgColor = action.isDestructive
         ? Theme.of(context).colorScheme.errorContainer.withValues(alpha: 0.3)
-        : Theme.of(context).colorScheme.surfaceContainerHighest.withOpacity(0.4);
+        : Theme.of(context).colorScheme.surfaceContainerHighest.withValues(alpha: 0.4);
 
     return InkWell(
       onTap: () {

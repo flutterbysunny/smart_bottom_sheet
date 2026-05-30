@@ -1,7 +1,13 @@
 import 'package:flutter/material.dart';
 
+/// Physics utilities for sheet drag behavior.
+///
+/// Provides rubber-band resistance, dampening,
+/// dismiss threshold, and animation constants.
 class SheetPhysics {
-  /// Rubber-band resistance — boundary cross karne par elastic feel
+  /// Applies elastic resistance when dragging beyond boundaries.
+  ///
+  /// Returns a value that resists going past [minHeight] or [maxHeight].
   static double applyResistance({
     required double currentHeight,
     required double minHeight,
@@ -12,16 +18,14 @@ class SheetPhysics {
       final overflow = minHeight - currentHeight;
       return minHeight - (overflow * resistanceFactor);
     }
-
     if (currentHeight > maxHeight) {
       final overflow = currentHeight - maxHeight;
       return maxHeight + (overflow * resistanceFactor);
     }
-
     return currentHeight;
   }
 
-  /// Drag delta — fast drag par slow response (natural feel)
+  /// Slows down drag delta when sheet is out of bounds.
   static double applyDampening({
     required double delta,
     required double currentHeight,
@@ -31,11 +35,10 @@ class SheetPhysics {
   }) {
     final bool isOutOfBounds =
         currentHeight < minHeight || currentHeight > maxHeight;
-
     return isOutOfBounds ? delta * dampeningFactor : delta;
   }
 
-  /// Sheet dismiss threshold — kitna neeche aane par close ho
+  /// Returns true if sheet should be dismissed based on current height.
   static bool shouldDismiss({
     required double currentHeight,
     required double peekHeight,
@@ -44,9 +47,15 @@ class SheetPhysics {
     return currentHeight < peekHeight * threshold;
   }
 
-  /// Animation curve — drag end ke baad snap animation
+  /// Curve used for snap animations.
   static const Curve snapCurve = Curves.easeOutCubic;
+
+  /// Curve used for dismiss animations.
   static const Curve dismissCurve = Curves.easeInCubic;
+
+  /// Duration for snap animations.
   static const Duration snapDuration = Duration(milliseconds: 320);
+
+  /// Duration for dismiss animations.
   static const Duration dismissDuration = Duration(milliseconds: 220);
 }
