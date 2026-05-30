@@ -19,7 +19,7 @@ Add to your `pubspec.yaml`:
 
 ```yaml
 dependencies:
-  smart_bottom_sheet: ^0.0.1
+  smart_bottom_sheet: ^1.0.0
 ```
 
 Then run:
@@ -163,7 +163,7 @@ SheetConfig(
 ## Additional Information
 
 - 📦 [pub.dev](https://pub.dev/packages/smart_bottom_sheet)
-- 🐛 [File an issue](https://github.com/yourusername/smart_bottom_sheet/issues)
+- 🐛 [File an issue](https://github.com/flutterbysunny/smart_bottom_sheet/issues)
 - 🤝 Contributions welcome — open a PR!
 
 ## License
