@@ -1,6 +1,6 @@
 name: smart_bottom_sheet
 description: A smart, feature-rich Flutter bottom sheet package with snap points, physics-based dragging, form, stepper, confirmation, and rating sheets.
-version: 1.0.1
+version: 1.0.2
 
 homepage: https://github.com/flutterbysunny/smart_bottom_sheet
 repository: https://github.com/flutterbysunny/smart_bottom_sheet

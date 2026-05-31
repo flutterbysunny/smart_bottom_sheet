@@ -1,16 +1,50 @@
 import 'package:flutter/material.dart';
 import '../utils/sheet_config.dart';
+import '../utils/sheet_handle.dart';
+import '../utils/sheet_backdrop.dart';
+import '../utils/sheet_theme.dart';
 
+/// A bottom sheet with an animated star rating and optional comment field.
+///
+/// Automatically uses [SheetTheme] config if available in widget tree.
+///
+/// ```dart
+/// RatingSheet.show(
+///   context,
+///   title: 'How was your order?',
+///   subtitle: 'Burger King · Zomato Gold',
+///   showComment: true,
+///   onSubmit: (stars, comment) {
+///     print('Rated $stars stars');
+///   },
+/// );
+/// ```
 class RatingSheet extends StatefulWidget {
+  /// Title displayed at the top of the sheet.
   final String title;
+
+  /// Optional subtitle below the title.
   final String? subtitle;
+
+  /// Maximum number of stars. Default is 5.
   final int maxStars;
+
+  /// Whether to show the comment text field.
   final bool showComment;
+
+  /// Hint text for the comment field.
   final String commentHint;
+
+  /// Label for the submit button.
   final String submitLabel;
+
+  /// Sheet configuration — falls back to [SheetTheme] if not provided.
   final SheetConfig config;
+
+  /// Called when rating is submitted with stars and optional comment.
   final void Function(int stars, String? comment) onSubmit;
 
+  /// Creates a [RatingSheet].
   const RatingSheet({
     super.key,
     required this.title,
@@ -23,6 +57,7 @@ class RatingSheet extends StatefulWidget {
     this.config = const SheetConfig(),
   });
 
+  /// Shows a [RatingSheet] as a modal bottom sheet.
   static Future<void> show(
       BuildContext context, {
         required String title,
@@ -32,13 +67,15 @@ class RatingSheet extends StatefulWidget {
         bool showComment = true,
         String commentHint = 'Add a comment (optional)',
         String submitLabel = 'Submit Rating',
-        SheetConfig config = const SheetConfig(),
+        SheetConfig? config,
       }) {
+    final resolvedConfig = config ?? SheetTheme.configOf(context);
     return showModalBottomSheet(
       context: context,
       backgroundColor: Colors.transparent,
-      isDismissible: config.isDismissible,
+      isDismissible: resolvedConfig.isDismissible,
       isScrollControlled: true,
+      barrierColor: _resolveBarrierColor(resolvedConfig),
       builder: (_) => RatingSheet(
         title: title,
         subtitle: subtitle,
@@ -47,9 +84,25 @@ class RatingSheet extends StatefulWidget {
         showComment: showComment,
         commentHint: commentHint,
         submitLabel: submitLabel,
-        config: config,
+        config: resolvedConfig,
       ),
     );
+  }
+
+  static Color _resolveBarrierColor(SheetConfig config) {
+    switch (config.backdrop.style) {
+      case BackdropStyle.dark:
+        return (config.backdrop.color ?? Colors.black)
+            .withValues(alpha:config.backdrop.opacity);
+      case BackdropStyle.light:
+        return (config.backdrop.color ?? Colors.white)
+            .withValues(alpha:config.backdrop.opacity);
+      case BackdropStyle.frosted:
+        return (config.backdrop.color ?? Colors.black)
+            .withValues(alpha:config.backdrop.opacity * 0.5);
+      case BackdropStyle.none:
+        return Colors.transparent;
+    }
   }
 
   @override
@@ -87,7 +140,9 @@ class _RatingSheetState extends State<RatingSheet> {
 
   Color _starColor(int index) {
     final active = _hoveredStar > 0 ? _hoveredStar : _selectedStars;
-    return index <= active ? const Color(0xFFEF9F27) : Colors.grey.shade300;
+    return index <= active
+        ? const Color(0xFFEF9F27)
+        : Colors.grey.shade300;
   }
 
   void _submit() async {
@@ -129,17 +184,10 @@ class _RatingSheetState extends State<RatingSheet> {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          // handle
-          Padding(
-            padding: const EdgeInsets.symmetric(vertical: 10),
-            child: Container(
-              width: 36,
-              height: 4,
-              decoration: BoxDecoration(
-                color: Theme.of(context).dividerColor,
-                borderRadius: BorderRadius.circular(2),
-              ),
-            ),
+          // custom handle
+          SheetHandle(
+            style: widget.config.handleStyle,
+            color: widget.config.handleColor,
           ),
 
           // title
@@ -170,7 +218,8 @@ class _RatingSheetState extends State<RatingSheet> {
               final index = i + 1;
               return GestureDetector(
                 onTap: () => setState(() => _selectedStars = index),
-                onTapDown: (_) => setState(() => _hoveredStar = index),
+                onTapDown: (_) =>
+                    setState(() => _hoveredStar = index),
                 onTapUp: (_) => setState(() => _hoveredStar = 0),
                 onTapCancel: () => setState(() => _hoveredStar = 0),
                 child: Padding(
@@ -220,7 +269,7 @@ class _RatingSheetState extends State<RatingSheet> {
                 fillColor: Theme.of(context)
                     .colorScheme
                     .surfaceContainerHighest
-                    .withValues(alpha: 0.4),
+                    .withValues(alpha:0.4),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
                   borderSide: BorderSide.none,

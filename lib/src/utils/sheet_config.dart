@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'sheet_handle.dart';
-
+import 'sheet_backdrop.dart';
 
 /// Snap positions for [SnapSheet].
 enum SnapPoint {
@@ -37,6 +37,7 @@ enum SheetColor {
 ///   isDismissible: false,
 ///   handleStyle: HandleStyle.pill,
 ///   handleColor: Colors.blue,
+///   backdrop: SheetBackdrop(style: BackdropStyle.frosted),
 /// );
 /// ```
 class SheetConfig {
@@ -64,6 +65,12 @@ class SheetConfig {
   /// Border radius of the sheet. Defaults to 20px top corners.
   final BorderRadius? borderRadius;
 
+  /// Backdrop configuration for the sheet overlay.
+  final SheetBackdrop backdrop;
+
+  /// Called when the backdrop is tapped.
+  final VoidCallback? onBackdropTap;
+
   /// Creates a [SheetConfig] with optional customization.
   const SheetConfig({
     this.peekHeight = 90,
@@ -74,6 +81,8 @@ class SheetConfig {
     this.handleColor,
     this.backgroundColor,
     this.borderRadius,
+    this.backdrop = const SheetBackdrop(),
+    this.onBackdropTap,
   });
 }
 

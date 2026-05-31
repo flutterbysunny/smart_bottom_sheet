@@ -213,6 +213,101 @@ void main() {
     });
   });
 
+  // ─── BackdropStyle Tests ─────────────────────────────────────
+  group('BackdropStyle', () {
+    test('all backdrop styles are available', () {
+      expect(BackdropStyle.values.length, 4);
+      expect(BackdropStyle.values, containsAll([
+        BackdropStyle.dark,
+        BackdropStyle.light,
+        BackdropStyle.frosted,
+        BackdropStyle.none,
+      ]));
+    });
+  });
+
+  // ─── SheetBackdrop Tests ─────────────────────────────────────
+  group('SheetBackdrop', () {
+    test('default values are correct', () {
+      const backdrop = SheetBackdrop();
+      expect(backdrop.style, BackdropStyle.dark);
+      expect(backdrop.blurStrength, 8);
+      expect(backdrop.opacity, 0.5);
+      expect(backdrop.color, null);
+    });
+
+    test('frosted preset sets correct values', () {
+      const backdrop = SheetBackdrop.frosted();
+      expect(backdrop.style, BackdropStyle.frosted);
+      expect(backdrop.blurStrength, 10);
+      expect(backdrop.opacity, 0.2);
+    });
+
+    test('none preset sets correct values', () {
+      const backdrop = SheetBackdrop.none();
+      expect(backdrop.style, BackdropStyle.none);
+      expect(backdrop.opacity, 0);
+    });
+  });
+
+  // ─── SideSheetDirection Tests ────────────────────────────────
+  group('SideSheetDirection', () {
+    test('all directions are available', () {
+      expect(SideSheetDirection.values.length, 2);
+      expect(SideSheetDirection.values, containsAll([
+        SideSheetDirection.right,
+        SideSheetDirection.left,
+      ]));
+    });
+  });
+
+  // ─── SheetTheme Tests ────────────────────────────────────────
+  group('SheetTheme', () {
+    testWidgets('provides config to descendants', (tester) async {
+      const customConfig = SheetConfig(
+        peekHeight: 150,
+        handleStyle: HandleStyle.pill,
+      );
+
+      late SheetConfig resolvedConfig;
+
+      await tester.pumpWidget(
+        SheetTheme(
+          config: customConfig,
+          child: MaterialApp(
+            home: Builder(
+              builder: (context) {
+                resolvedConfig = SheetTheme.configOf(context);
+                return const Scaffold();
+              },
+            ),
+          ),
+        ),
+      );
+
+      expect(resolvedConfig.peekHeight, 150);
+      expect(resolvedConfig.handleStyle, HandleStyle.pill);
+    });
+
+    testWidgets('returns default config when no theme', (tester) async {
+      late SheetConfig resolvedConfig;
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Builder(
+            builder: (context) {
+              resolvedConfig = SheetTheme.configOf(context);
+              return const Scaffold();
+            },
+          ),
+        ),
+      );
+
+      expect(resolvedConfig.peekHeight, 90);
+      expect(resolvedConfig.handleStyle, HandleStyle.defaultHandle);
+    });
+  });
+
   // ─── SnapPoint Tests ─────────────────────────────────────────
   group('SnapPoint', () {
     test('all snap points are available', () {

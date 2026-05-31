@@ -1,11 +1,28 @@
 import 'package:flutter/material.dart';
 import '../utils/sheet_config.dart';
+import '../utils/sheet_handle.dart';
+import '../utils/sheet_backdrop.dart';
+import '../utils/sheet_theme.dart';
 
+/// A single step in [StepperSheet].
+///
+/// ```dart
+/// SheetStep(
+///   title: 'Address',
+///   child: AddressWidget(),
+/// )
+/// ```
 class SheetStep {
+  /// Title of this step shown in the indicator.
   final String title;
+
+  /// Content widget for this step.
   final Widget child;
+
+  /// Whether to show the back button on this step.
   final bool showBackButton;
 
+  /// Creates a [SheetStep].
   const SheetStep({
     required this.title,
     required this.child,
@@ -13,15 +30,46 @@ class SheetStep {
   });
 }
 
+/// A bottom sheet with a multi-step flow and progress indicator.
+///
+/// Each step slides in with animation. No full-screen navigation needed.
+/// Automatically uses [SheetTheme] config if available in widget tree.
+///
+/// ```dart
+/// StepperSheet.show(
+///   context,
+///   title: 'Place Order',
+///   steps: [
+///     SheetStep(title: 'Bag', child: BagWidget()),
+///     SheetStep(title: 'Address', child: AddressWidget()),
+///     SheetStep(title: 'Payment', child: PaymentWidget()),
+///   ],
+///   onComplete: () => placeOrder(),
+/// );
+/// ```
 class StepperSheet extends StatefulWidget {
+  /// Title displayed at the top of the sheet.
   final String title;
+
+  /// List of steps to display.
   final List<SheetStep> steps;
+
+  /// Label for the next button.
   final String nextLabel;
+
+  /// Label for the finish button on the last step.
   final String finishLabel;
+
+  /// Sheet configuration — falls back to [SheetTheme] if not provided.
   final SheetConfig config;
+
+  /// Called when all steps are completed.
   final VoidCallback? onComplete;
+
+  /// Called when the sheet is cancelled.
   final VoidCallback? onCancel;
 
+  /// Creates a [StepperSheet].
   const StepperSheet({
     super.key,
     required this.title,
@@ -33,31 +81,50 @@ class StepperSheet extends StatefulWidget {
     this.onCancel,
   });
 
+  /// Shows a [StepperSheet] as a modal bottom sheet.
   static Future<void> show(
       BuildContext context, {
         required String title,
         required List<SheetStep> steps,
         String nextLabel = 'Continue',
         String finishLabel = 'Done',
-        SheetConfig config = const SheetConfig(),
+        SheetConfig? config,
         VoidCallback? onComplete,
         VoidCallback? onCancel,
       }) {
+    final resolvedConfig = config ?? SheetTheme.configOf(context);
     return showModalBottomSheet(
       context: context,
       backgroundColor: Colors.transparent,
-      isDismissible: config.isDismissible,
+      isDismissible: resolvedConfig.isDismissible,
       isScrollControlled: true,
+      barrierColor: _resolveBarrierColor(resolvedConfig),
       builder: (_) => StepperSheet(
         title: title,
         steps: steps,
         nextLabel: nextLabel,
         finishLabel: finishLabel,
-        config: config,
+        config: resolvedConfig,
         onComplete: onComplete,
         onCancel: onCancel,
       ),
     );
+  }
+
+  static Color _resolveBarrierColor(SheetConfig config) {
+    switch (config.backdrop.style) {
+      case BackdropStyle.dark:
+        return (config.backdrop.color ?? Colors.black)
+            .withValues(alpha:config.backdrop.opacity);
+      case BackdropStyle.light:
+        return (config.backdrop.color ?? Colors.white)
+            .withValues(alpha:config.backdrop.opacity);
+      case BackdropStyle.frosted:
+        return (config.backdrop.color ?? Colors.black)
+            .withValues(alpha:config.backdrop.opacity * 0.5);
+      case BackdropStyle.none:
+        return Colors.transparent;
+    }
   }
 
   @override
@@ -127,7 +194,6 @@ class _StepperSheetState extends State<StepperSheet>
   }
 
   double get _progress => (_currentStep + 1) / widget.steps.length;
-
   bool get _isLastStep => _currentStep == widget.steps.length - 1;
 
   @override
@@ -150,18 +216,11 @@ class _StepperSheetState extends State<StepperSheet>
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // handle
+          // custom handle
           Center(
-            child: Padding(
-              padding: const EdgeInsets.symmetric(vertical: 10),
-              child: Container(
-                width: 36,
-                height: 4,
-                decoration: BoxDecoration(
-                  color: Theme.of(context).dividerColor,
-                  borderRadius: BorderRadius.circular(2),
-                ),
-              ),
+            child: SheetHandle(
+              style: widget.config.handleStyle,
+              color: widget.config.handleColor,
             ),
           ),
 
@@ -171,9 +230,8 @@ class _StepperSheetState extends State<StepperSheet>
             child: LinearProgressIndicator(
               value: _progress,
               minHeight: 4,
-              backgroundColor: Theme.of(context)
-                  .colorScheme
-                  .surfaceContainerHighest,
+              backgroundColor:
+              Theme.of(context).colorScheme.surfaceContainerHighest,
               valueColor: AlwaysStoppedAnimation(
                 Theme.of(context).colorScheme.primary,
               ),
@@ -244,7 +302,8 @@ class _StepperSheetState extends State<StepperSheet>
                     onPressed: _goBack,
                     child: Text(
                       _currentStep == 0 ? 'Cancel' : 'Back',
-                      style: const TextStyle(fontWeight: FontWeight.w500),
+                      style:
+                      const TextStyle(fontWeight: FontWeight.w500),
                     ),
                   ),
                 ),
@@ -276,10 +335,18 @@ class _StepperSheetState extends State<StepperSheet>
   }
 }
 
+/// Animated step indicator circle with label.
 class _StepIndicator extends StatelessWidget {
+  /// Step number displayed inside the circle.
   final int index;
+
+  /// Label below the circle.
   final String label;
+
+  /// Whether this step is completed.
   final bool isDone;
+
+  /// Whether this step is currently active.
   final bool isActive;
 
   const _StepIndicator({
@@ -307,7 +374,9 @@ class _StepIndicator extends StatelessWidget {
                 ? Theme.of(context).colorScheme.primary
                 : isActive
                 ? Theme.of(context).colorScheme.primaryContainer
-                : Theme.of(context).colorScheme.surfaceContainerHighest,
+                : Theme.of(context)
+                .colorScheme
+                .surfaceContainerHighest,
           ),
           child: Center(
             child: isDone
@@ -333,7 +402,8 @@ class _StepIndicator extends StatelessWidget {
           label,
           style: TextStyle(
             fontSize: 9,
-            fontWeight: isActive ? FontWeight.w600 : FontWeight.w400,
+            fontWeight:
+            isActive ? FontWeight.w600 : FontWeight.w400,
             color: color,
           ),
           maxLines: 1,

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../smart_bottom_sheet.dart';
 import '../controller/sheet_controller.dart';
 import '../physics/sheet_physics.dart';
 import '../utils/sheet_config.dart';
@@ -55,10 +56,11 @@ class SnapSheet extends StatefulWidget {
   });
 
   /// Shows a [SnapSheet] as a modal bottom sheet.
+  /// Shows a [SnapSheet] as a modal bottom sheet.
   static Future<void> show(
       BuildContext context, {
         required Widget child,
-        SheetConfig config = const SheetConfig(),
+        SheetConfig? config,
         SnapPoint initialSnap = SnapPoint.half,
         SheetController? controller,
         VoidCallback? onDismiss,
@@ -66,13 +68,15 @@ class SnapSheet extends StatefulWidget {
         VoidCallback? onOpen,
         VoidCallback? onClose,
       }) {
+    final resolvedConfig = config ?? SheetTheme.configOf(context);
     return showModalBottomSheet(
       context: context,
       backgroundColor: Colors.transparent,
-      isDismissible: config.isDismissible,
+      isDismissible: resolvedConfig.isDismissible,
       isScrollControlled: true,
+      barrierColor: _resolveBarrierColor(resolvedConfig),
       builder: (_) => SnapSheet(
-        config: config,
+        config: resolvedConfig,
         initialSnap: initialSnap,
         controller: controller,
         onDismiss: onDismiss,
@@ -82,6 +86,22 @@ class SnapSheet extends StatefulWidget {
         child: child,
       ),
     );
+  }
+
+  static Color _resolveBarrierColor(SheetConfig config) {
+    switch (config.backdrop.style) {
+      case BackdropStyle.dark:
+        return (config.backdrop.color ?? Colors.black)
+            .withValues(alpha: config.backdrop.opacity);
+      case BackdropStyle.light:
+        return (config.backdrop.color ?? Colors.white)
+            .withValues(alpha:config.backdrop.opacity);
+      case BackdropStyle.frosted:
+        return (config.backdrop.color ?? Colors.black)
+            .withValues(alpha:config.backdrop.opacity * 0.5);
+      case BackdropStyle.none:
+        return Colors.transparent;
+    }
   }
 
   @override

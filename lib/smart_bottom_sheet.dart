@@ -18,7 +18,11 @@ export 'src/sheets/form_sheet.dart';
 export 'src/sheets/confirm_sheet.dart';
 export 'src/sheets/stepper_sheet.dart';
 export 'src/sheets/rating_sheet.dart';
+export 'src/sheets/side_sheet.dart';
 export 'src/utils/sheet_config.dart';
 export 'src/utils/sheet_stack_manager.dart';
 export 'src/utils/sheet_handle.dart';
+export 'src/utils/sheet_backdrop.dart';
+export 'src/utils/sheet_theme.dart';
+
 
